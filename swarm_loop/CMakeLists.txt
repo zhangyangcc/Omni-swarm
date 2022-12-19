@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS_RELEASE "-g -O3 -Wall -Wno-deprecated-declarations -Wno-format")
-set(USE_TENSORRT on)
+set(USE_TENSORRT false)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   vins
 )
 
-
+find_package(faiss REQUIRED)
 SET("OpenCV_DIR"  "/usr/local/share/OpenCV/")
 find_package(OpenCV 3.4 REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -67,6 +67,7 @@ add_library(libswarm_loop
   src/swarm_loop.cpp
   src/loop_utils.cpp
 )
+target_include_directories(libswarm_loop PUBLIC "/home/zy/ros_ws/omni_swarm_ws/src/backward-cpp")
 
 add_library(${PROJECT_NAME}_nodelet
   src/swarm_loop_nodelet.cpp

@@ -6,12 +6,13 @@
 #include <swarm_msgs/swarm_lcm_converter.hpp>
 #include <chrono>
 #include <opencv2/core/eigen.hpp>
+#include "swarm_loop/HFNetSrv.h"
 
 using namespace std::chrono;
 
 double TRIANGLE_THRES;
 
-#define USE_TENSORRT
+//#define USE_TENSORRT
 
 LoopCam::LoopCam(CameraConfig _camera_configuration, 
     const std::string &camera_config_path, 
@@ -33,8 +34,8 @@ LoopCam::LoopCam(CameraConfig _camera_configuration,
     cam = cam_factory.generateCameraFromYamlFile(camera_config_path);
 
 #ifndef USE_TENSORRT
-    hfnet_client = nh.serviceClient<HFNetSrv>("/swarm_loop/hfnet");
-    superpoint_client = nh.serviceClient<HFNetSrv>("/swarm_loop/superpoint");
+    hfnet_client = nh.serviceClient<swarm_loop::HFNetSrv>("/swarm_loop/hfnet");
+    superpoint_client = nh.serviceClient<swarm_loop::HFNetSrv>("/swarm_loop/superpoint");
 #endif
     camodocal::PinholeCamera* _cam = (camodocal::PinholeCamera*)cam.get();
 
@@ -584,8 +585,9 @@ ImageDescriptor_t LoopCam::extractor_img_desc_deepnet(ros::Time stamp, cv::Mat i
 
     return img_des;
 #else
-    HFNetSrv hfnet_srv;
-    hfnet_srv.request.image = msg;
+    swarm_loop::HFNetSrv hfnet_srv;
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+    hfnet_srv.request.image = *msg;
     if (superpoint_mode) {
         if (superpoint_client.call(hfnet_srv))
         {

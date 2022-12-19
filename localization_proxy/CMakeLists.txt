@@ -45,6 +45,7 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}_node src/localization_proxy.cpp)
+target_include_directories(${PROJECT_NAME}_node PUBLIC "/home/zy/ros_ws/omni_swarm_ws/src/backward-cpp")
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 

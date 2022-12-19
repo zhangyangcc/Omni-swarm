@@ -18,6 +18,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <swarm_loop/utils.h>
+#include <fstream>
 
 //#include <swarm_loop/HFNetSrv.h>
 

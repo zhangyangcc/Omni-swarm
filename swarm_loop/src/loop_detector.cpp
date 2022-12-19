@@ -7,6 +7,7 @@ using namespace std::chrono;
 
 #define USE_FUNDMENTAL
 #define MAX_LOOP_ID 100000000
+using idx_t = int64_t;
 
 void LoopDetector::on_image_recv(const FisheyeFrameDescriptor_t & flatten_desc, std::vector<cv::Mat> imgs) {
     TicToc tt;
@@ -198,7 +199,8 @@ int LoopDetector::query_from_database(const ImageDescriptor_t & img_desc, bool i
 
 int LoopDetector::query_from_database(const ImageDescriptor_t & img_desc, faiss::IndexFlatIP & index, bool remote_db, double thres, int max_index, double & distance) {
     float distances[1000] = {0};
-    faiss::Index::idx_t labels[1000];
+    //faiss::Index::idx_t labels[1000];
+    idx_t labels[1000];
 
     int index_offset = 0;
     if (remote_db) {

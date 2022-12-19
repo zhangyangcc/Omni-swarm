@@ -29,6 +29,8 @@ std::normal_distribution<double> d{0,1};
 
 #define BACKWARD_HAS_DW 1
 #include <backward.hpp>
+
+using idx_t = int64_t;
 namespace backward
 {
     backward::SignalHandling sh;
@@ -480,7 +482,8 @@ public:
         //First we found the nearest poses
         int search_num = SEARCH_NEAREST_NUM + MATCH_INDEX_DIST + drone_num;
         float distances[1024] = {0};
-        faiss::Index::idx_t labels[1024];
+        // faiss::Index::idx_t labels[1024];
+        idx_t labels[1024];
         poses_index.search(1, pos_gt_f.data(), search_num, distances, labels);
         
         for (int j = 0; j < search_num; j++) {
