@@ -43,6 +43,20 @@ if (USE_TENSORRT)
   add_definitions("-D USE_TENSORRT")
 endif()
 
+
+add_service_files(
+  FILES
+  HFNetSrv.srv
+)
+
+generate_messages(
+    DEPENDENCIES
+    sensor_msgs
+    std_msgs
+    geometry_msgs
+  )
+
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES loop_cnn
@@ -134,7 +148,7 @@ else()
     lcm
     faiss
     dw
-    loop_cnn
+#    loop_cnn
   )
 endif()
 
