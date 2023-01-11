@@ -4,6 +4,7 @@
     <arg name="start_uwb_node" default="false" />
     <arg name="enable_uwb" default="true" />
     <arg name="self_id" default="0" />
+    <arg name="output_path" default="/home/zy/ros_ws/omni_swarm_ws/output/proxy_output/vio.csv" />
     
     <include file="$(find inf_uwb_ros)/launch/uwb_node.launch" if="$(arg start_uwb_node)">
     </include>
@@ -13,6 +14,7 @@
        <param name="sf_queue_max_size" value="$(arg sf_queue_max_size)" type="int" />
        <param name="enable_uwb" value="$(arg enable_uwb)" type="bool" />
        <param name="self_id" value="$(arg self_id)" type="int" />
+       <param name="output_path" value="$(arg output_path)" type="string" />
        <rosparam>
             send_fused_freq: 0.0
             send_fused_basecoor_freq: 30.0

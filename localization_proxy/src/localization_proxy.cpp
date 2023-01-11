@@ -19,7 +19,7 @@
 #include <swarmcomm_msgs/remote_uwb_info.h>
 #include <geometry_msgs/Point.h>
 #include <map>
-
+#include <fstream>
 
 using namespace swarm_msgs;
 using namespace nav_msgs;
@@ -330,6 +330,24 @@ class LocalProxy {
         Eigen::Vector3d eul;
         bool ret = on_node_realtime_info_mavlink_msg_recv(msg, _id, ts, pos, eul, vel, _dis);
         if (ret) {
+            
+            auto tmp_quat = eulers2quat(eul);
+            std::ofstream foutC(output_path, std::ios::app);
+            foutC.setf(std::ios::fixed, std::ios::floatfield);
+            foutC.precision(0);
+            foutC << ts.toSec() * 1e9 << " ";
+            foutC.precision(5);            
+
+            foutC << pos.x << " "
+              << pos.y << " "
+              << pos.z << " "
+              << tmp_quat.x() << " "
+              << tmp_quat.y() << " "
+              << tmp_quat.z() << " " 
+              << tmp_quat.w() << std::endl;
+            
+            foutC.close();
+
             int s_index = find_sf_swarm_detected(ts);
             if (s_index >= 0) {
                 ROS_INFO_THROTTLE(1.0, "[LOCAL_PROXY] Appending ODOM DIS TS %5.1f sf to frame %d/%ld", (ts - this->tsstart).toSec()*1000, s_index, sf_queue.size());
@@ -795,6 +813,7 @@ class LocalProxy {
     }
 
     std::map<int, ros::Publisher> drone_odom_pubs;
+    std::string output_path;
     bool publish_remote_odom = false;
     int sf_queue_max_size = 10;
     bool _enable_uwb = true;
@@ -823,6 +842,8 @@ public:
     LocalProxy(ros::NodeHandle &_nh) : nh(_nh) {
         ROS_INFO("[LOCAL_PROXY] Start SWARM Drone Proxy. Mavlink channels %d", MAVLINK_COMM_NUM_BUFFERS);
         // bigger than 3 is ok
+        nh.param<std::string>("output_path",output_path,"/home/zy/ros_ws/omni_swarm_ws/output/proxy_output/vio.csv");
+        std::ofstream fout(output_path, std::ios::out);
         nh.param<int>("sf_queue_max_size", sf_queue_max_size, 10);
         ROS_INFO("[LOCAL_PROXY] sf_queue_max_size %d", sf_queue_max_size);
         nh.param<int>("force_id", _force_id, -1); //Use a force id to publish the swarm frame messages, which means you can direct use gcs to compute same thing
