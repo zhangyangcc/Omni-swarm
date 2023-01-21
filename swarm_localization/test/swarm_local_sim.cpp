@@ -10,6 +10,7 @@
 #include "opencv2/core/eigen.hpp"
 #include <faiss/IndexFlat.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <fstream>
 
 std::random_device rd{};
 std::default_random_engine eng{0};
@@ -31,6 +32,7 @@ std::normal_distribution<double> d{0,1};
 #include <backward.hpp>
 
 using idx_t = int64_t;
+using namespace std;
 namespace backward
 {
     backward::SignalHandling sh;
@@ -43,24 +45,24 @@ Swarm::Pose random_pose_4dof(double cov_pos, double cov_yaw) {
     return Swarm::Pose(noise_pos, d(eng)*std_yaw);
 }
 
-double overlap(const cv::Rect2d bbox, const cv::Rect2d bbox2) {
-        double XA1 = bbox.x;
-        double XA2 = bbox.x + bbox.width;
-        double XB1 = bbox2.x;
-        double XB2 = bbox2.x + bbox2.width;
+// double overlap(const cv::Rect2d bbox, const cv::Rect2d bbox2) {
+//         double XA1 = bbox.x;
+//         double XA2 = bbox.x + bbox.width;
+//         double XB1 = bbox2.x;
+//         double XB2 = bbox2.x + bbox2.width;
 
-        double YA1 = bbox.y;
-        double YA2 = bbox.y + bbox.height;
-        double YB1 = bbox2.y;
-        double YB2 = bbox2.y + bbox2.height;
+//         double YA1 = bbox.y;
+//         double YA2 = bbox.y + bbox.height;
+//         double YB1 = bbox2.y;
+//         double YB2 = bbox2.y + bbox2.height;
 
-        double SA = bbox.area();
-        double SB = bbox2.area();
+//         double SA = bbox.area();
+//         double SB = bbox2.area();
 
-        double SI = std::max(0.0, std::min(XA2, XB2) - std::max(XA1, XB1)) * std::max(0.0, std::min(YA2, YB2) - std::max(YA1, YB1));
-        double SU = SA + SB - SI;
-        return SI / std::max(SA, SB);
-    }
+//         double SI = std::max(0.0, std::min(XA2, XB2) - std::max(XA1, XB1)) * std::max(0.0, std::min(YA2, YB2) - std::max(YA1, YB1));
+//         double SU = SA + SB - SI;
+//         return SI / std::max(SA, SB);
+//     }
 
 class SwarmLocalSim {
     int drone_num = 0;
@@ -173,9 +175,11 @@ public:
         nh.param<double>("max_t", max_t, 10);
         nh.param<double>("min_distance_det", min_distance_det, 0.2);
         nh.param<std::string>("extrinsic_path", extrinsic_path, "");
-        nh.param<std::string>("cam_file", camera_config_file, "");
-        fisheye = new swarm_detector_pkg::FisheyeUndist(camera_config_file, 235, true, img_width);
-    
+        //nh.param<std::string>("cam_file", camera_config_file, "");
+        //fisheye = new swarm_detector_pkg::FisheyeUndist(camera_config_file, 235, true, img_width);
+        std::ofstream fout("/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/sim.csv", std::ios::out);
+        fout.close();
+
         ground_truth_trajs.resize(drone_num);
         ego_motion_trajs.resize(drone_num);
         est_trajs.resize(drone_num);
@@ -230,7 +234,7 @@ public:
             Vector3d(0, 0, z_max) + Gc_imu,
         };
 
-        init_cameras(extrinsic_path, camera_config_file);
+        init_cameras(extrinsic_path);
 
         t0 = ros::Time::now();
         ROS_INFO("[SWARM_SIM] Sim start.");
@@ -247,8 +251,8 @@ public:
         }
     }
     
-    void init_cameras(const std::string & extrinsic_path, const std::string & camera_config_file) { 
-        ROS_INFO("[SWARM_SIM] Try to read extrinsic from %s camera from %s", extrinsic_path.c_str(), camera_config_file.c_str());
+    void init_cameras(const std::string & extrinsic_path) { 
+        ROS_INFO("[SWARM_SIM] Try to read extrinsic from %s camera from", extrinsic_path.c_str());
         FILE *fh = fopen(extrinsic_path.c_str(), "r");
 
         Eigen::Matrix3d Rcam;
@@ -285,68 +289,68 @@ public:
     }
 
 
-    std::pair<bool, Eigen::Vector2d> reproject_point_to_vcam(int direction, Eigen::Vector3d corner, Swarm::Pose est, Swarm::Pose cur) const {
-        auto cam = fisheye->cam_side;
-        if (direction == 0) {
-            cam = fisheye->cam_top;
-        }
-        Eigen::Vector2d ret(0, 0);
+    // std::pair<bool, Eigen::Vector2d> reproject_point_to_vcam(int direction, Eigen::Vector3d corner, Swarm::Pose est, Swarm::Pose cur) const {
+    //     auto cam = fisheye->cam_side;
+    //     if (direction == 0) {
+    //         cam = fisheye->cam_top;
+    //     }
+    //     Eigen::Vector2d ret(0, 0);
 
-        auto corner3d_body = est * corner;
-        corner3d_body = cur.apply_inv_pose_to(corner3d_body);
-        if (corner3d_body.z() < 0) {
-            return std::make_pair(false, ret);
-        }
+    //     auto corner3d_body = est * corner;
+    //     corner3d_body = cur.apply_inv_pose_to(corner3d_body);
+    //     if (corner3d_body.z() < 0) {
+    //         return std::make_pair(false, ret);
+    //     }
 
-        cam->spaceToPlane(corner3d_body, ret);
-        return std::make_pair(true, ret);
-    }
+    //     cam->spaceToPlane(corner3d_body, ret);
+    //     return std::make_pair(true, ret);
+    // }
 
-    std::pair<bool, cv::Rect2d> reproject_drone_to_vcam(int direction, Swarm::Pose est, Swarm::Pose cur, const std::vector<Vector3d> & corners) const {
-        cv::Rect2d reproject_bbox;
-        MatrixXd corners2d_body(2, corners.size());
-        auto cam = fisheye->cam_side;
-        if (direction == 0) {
-            cam = fisheye->cam_top;
-        }
+    // std::pair<bool, cv::Rect2d> reproject_drone_to_vcam(int direction, Swarm::Pose est, Swarm::Pose cur, const std::vector<Vector3d> & corners) const {
+    //     cv::Rect2d reproject_bbox;
+    //     MatrixXd corners2d_body(2, corners.size());
+    //     auto cam = fisheye->cam_side;
+    //     if (direction == 0) {
+    //         cam = fisheye->cam_top;
+    //     }
 
-        // std::cout << "VCam\t" << direction << "\test pose\t" << est.tostr() << "\tcam pose\t" << cur.tostr()  << std::endl;
-        for (size_t i = 0; i < corners.size(); i ++) {
-            auto corner = corners[i];
-            auto corner3d_body = est * corner;
-            corner3d_body = cur.apply_inv_pose_to(corner3d_body);
+    //     // std::cout << "VCam\t" << direction << "\test pose\t" << est.tostr() << "\tcam pose\t" << cur.tostr()  << std::endl;
+    //     for (size_t i = 0; i < corners.size(); i ++) {
+    //         auto corner = corners[i];
+    //         auto corner3d_body = est * corner;
+    //         corner3d_body = cur.apply_inv_pose_to(corner3d_body);
 
-            if (corner3d_body.z() < 0) {
-                return std::make_pair(false, reproject_bbox);
-            }
+    //         if (corner3d_body.z() < 0) {
+    //             return std::make_pair(false, reproject_bbox);
+    //         }
 
-            Vector2d corner2d;
-            cam->spaceToPlane(corner3d_body, corner2d);
-            corners2d_body.block(0, i, 2, 1) = corner2d;
-            // std::cout << "corner3d\t" << (est * corner).transpose() << "body\t" << corner3d_body.transpose() << "2d" << corners2d_body.transpose() << std::endl;
-        }
+    //         Vector2d corner2d;
+    //         cam->spaceToPlane(corner3d_body, corner2d);
+    //         corners2d_body.block(0, i, 2, 1) = corner2d;
+    //         // std::cout << "corner3d\t" << (est * corner).transpose() << "body\t" << corner3d_body.transpose() << "2d" << corners2d_body.transpose() << std::endl;
+    //     }
 
 
-        auto xs = corners2d_body.block(0, 0, 1, corners2d_body.cols());
-        auto ys = corners2d_body.block(1, 0, 1, corners2d_body.cols());
+    //     auto xs = corners2d_body.block(0, 0, 1, corners2d_body.cols());
+    //     auto ys = corners2d_body.block(1, 0, 1, corners2d_body.cols());
 
-        reproject_bbox.x = xs.minCoeff();
-        reproject_bbox.width = xs.maxCoeff() - reproject_bbox.x;
-        reproject_bbox.y = ys.minCoeff();
-        reproject_bbox.height = ys.maxCoeff() - reproject_bbox.y;
+    //     reproject_bbox.x = xs.minCoeff();
+    //     reproject_bbox.width = xs.maxCoeff() - reproject_bbox.x;
+    //     reproject_bbox.y = ys.minCoeff();
+    //     reproject_bbox.height = ys.maxCoeff() - reproject_bbox.y;
 
-        // std::cout << "corner3d_body\n" << corners2d_body << std::endl;
-        // std::cout << "corner3d_body_col_xs\n" << xs << std::endl;
-        // std::cout << "corner3d_body_col_ys\n" << ys << std::endl;
-        // std::cout << "bbox\n" << reproject_bbox << std::endl;
+    //     // std::cout << "corner3d_body\n" << corners2d_body << std::endl;
+    //     // std::cout << "corner3d_body_col_xs\n" << xs << std::endl;
+    //     // std::cout << "corner3d_body_col_ys\n" << ys << std::endl;
+    //     // std::cout << "bbox\n" << reproject_bbox << std::endl;
 
-        if (reproject_bbox.x < 0 || reproject_bbox.x + reproject_bbox.width  > cam->imageWidth() || 
-                reproject_bbox.y  < 0 || reproject_bbox.y + reproject_bbox.height > cam->imageWidth()) {
-            return std::make_pair(false, reproject_bbox);
-        }
+    //     if (reproject_bbox.x < 0 || reproject_bbox.x + reproject_bbox.width  > cam->imageWidth() || 
+    //             reproject_bbox.y  < 0 || reproject_bbox.y + reproject_bbox.height > cam->imageWidth()) {
+    //         return std::make_pair(false, reproject_bbox);
+    //     }
 
-        return std::make_pair(true, reproject_bbox);
-    }
+    //     return std::make_pair(true, reproject_bbox);
+    // }
 
     double generate_distance_measurement(int i, int j) const {
         Swarm::Pose posea = ground_truth_trajs[i].get_latest_pose();
@@ -355,89 +359,89 @@ public:
     }
 
 
-    swarm_msgs::node_detected generate_det_measurement(ros::Time stamp, int i, int j) {
-        Swarm::Pose posea = ground_truth_trajs[i].get_latest_pose();
-        Swarm::Pose poseb = ground_truth_trajs[j].get_latest_pose();
-        Swarm::Pose relative_pose = Swarm::Pose::DeltaPose(posea, poseb, true) * random_pose_4dof(det_cov_pos, det_cov_ang);
-        relative_pose.pos() *= (1 + d(eng)*sqrt(det_cov_len));
-        swarm_msgs::node_detected nd;
-        nd.local_pose_self = ego_motion_trajs[i].get_latest_pose().to_ros_pose();
-        nd.is_yaw_valid = true;
-        nd.self_drone_id = i;
-        nd.remote_drone_id = j;
-        nd.header.stamp = stamp;
-        nd.probaility = 1.0;
-        nd.dof_4 = true;
-        nd.id = MAX_DETECTOR_ID*i + detect_no;
-        Eigen::Matrix6d cov;
-        cov.setZero();
-        cov.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity() * det_cov_pos_label;
-        cov.block<3, 3>(3, 3) = Eigen::Matrix3d::Identity() * det_cov_ang_label;
-        nd.relative_pose.pose = relative_pose.to_ros_pose();
-        memcpy(nd.relative_pose.covariance.data(), cov.data(), sizeof(double)*36);
-        detect_no++;
-        return nd;
-    }
+    // swarm_msgs::node_detected generate_det_measurement(ros::Time stamp, int i, int j) {
+    //     Swarm::Pose posea = ground_truth_trajs[i].get_latest_pose();
+    //     Swarm::Pose poseb = ground_truth_trajs[j].get_latest_pose();
+    //     Swarm::Pose relative_pose = Swarm::Pose::DeltaPose(posea, poseb, true) * random_pose_4dof(det_cov_pos, det_cov_ang);
+    //     relative_pose.pos() *= (1 + d(eng)*sqrt(det_cov_len));
+    //     swarm_msgs::node_detected nd;
+    //     nd.local_pose_self = ego_motion_trajs[i].get_latest_pose().to_ros_pose();
+    //     nd.is_yaw_valid = true;
+    //     nd.self_drone_id = i;
+    //     nd.remote_drone_id = j;
+    //     nd.header.stamp = stamp;
+    //     nd.probaility = 1.0;
+    //     nd.dof_4 = true;
+    //     nd.id = MAX_DETECTOR_ID*i + detect_no;
+    //     Eigen::Matrix6d cov;
+    //     cov.setZero();
+    //     cov.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity() * det_cov_pos_label;
+    //     cov.block<3, 3>(3, 3) = Eigen::Matrix3d::Identity() * det_cov_ang_label;
+    //     nd.relative_pose.pose = relative_pose.to_ros_pose();
+    //     memcpy(nd.relative_pose.covariance.data(), cov.data(), sizeof(double)*36);
+    //     detect_no++;
+    //     return nd;
+    // }
 
-    int is_detect_valid(Swarm::Pose rel_pose_gt, int i, int j, int direction) {
-        //Now we reproject_bbox
-        auto ret = reproject_drone_to_vcam(direction, rel_pose_gt, vcam_poses[direction], boundbox3d_corners);
-        if (!ret.first) {
-            return 0;
-        }
+    // int is_detect_valid(Swarm::Pose rel_pose_gt, int i, int j, int direction) {
+    //     //Now we reproject_bbox
+    //     auto ret = reproject_drone_to_vcam(direction, rel_pose_gt, vcam_poses[direction], boundbox3d_corners);
+    //     if (!ret.first) {
+    //         return 0;
+    //     }
 
-        if (est_trajs[i].trajectory_size() == 0 || est_trajs[j].trajectory_size() == 0) {
-            return 1;
-        }
+    //     if (est_trajs[i].trajectory_size() == 0 || est_trajs[j].trajectory_size() == 0) {
+    //         return 1;
+    //     }
 
-        auto ret2 = reproject_drone_to_vcam(direction, est_trajs[j].get_latest_pose(), 
-                est_trajs[i].get_latest_pose()*vcam_poses[direction], boundbox3d_corners);
+    //     auto ret2 = reproject_drone_to_vcam(direction, est_trajs[j].get_latest_pose(), 
+    //             est_trajs[i].get_latest_pose()*vcam_poses[direction], boundbox3d_corners);
         
-        if (!ret2.first) {
-            return 1;
-        }
+    //     if (!ret2.first) {
+    //         return 1;
+    //     }
 
-        if (overlap(ret.second, ret2.second) > 0.05) {
-            //This matched to the est, so it has id.
-            return 2;
-        }
-        return 1;
-    }
+    //     if (overlap(ret.second, ret2.second) > 0.05) {
+    //         //This matched to the est, so it has id.
+    //         return 2;
+    //     }
+    //     return 1;
+    // }
 
 
-    void generate_pub_det_measurement(ros::Time stamp) {
-        for (int i = 0; i < drone_num; i++) {
-            Swarm::Pose posea = ground_truth_trajs[i].get_latest_pose();
-            for (int j = 0; j < drone_num; j++) {
-                if (i == j) {
-                    continue;
-                }
-                Swarm::Pose poseb = ground_truth_trajs[j].get_latest_pose();
-                Swarm::Pose rel_pose = Swarm::Pose::DeltaPose(posea, poseb);
-                double distance = rel_pose.pos().norm();
-                if (distance > max_distance_det || distance < min_distance_det) {
-                    continue;
-                }
+    // void generate_pub_det_measurement(ros::Time stamp) {
+    //     for (int i = 0; i < drone_num; i++) {
+    //         Swarm::Pose posea = ground_truth_trajs[i].get_latest_pose();
+    //         for (int j = 0; j < drone_num; j++) {
+    //             if (i == j) {
+    //                 continue;
+    //             }
+    //             Swarm::Pose poseb = ground_truth_trajs[j].get_latest_pose();
+    //             Swarm::Pose rel_pose = Swarm::Pose::DeltaPose(posea, poseb);
+    //             double distance = rel_pose.pos().norm();
+    //             if (distance > max_distance_det || distance < min_distance_det) {
+    //                 continue;
+    //             }
 
-                for (int d = VCAMERA_LEFT; d < vcam_poses.size(); d++) {
-                    if (det_only_front && d!=VCAMERA_FRONT) {
-                        continue;
-                    }
+    //             for (int d = VCAMERA_LEFT; d < vcam_poses.size(); d++) {
+    //                 if (det_only_front && d!=VCAMERA_FRONT) {
+    //                     continue;
+    //                 }
 
-                    int valid = is_detect_valid(rel_pose, i, j, d);
-                    if (valid > 0) {
-                        ROS_INFO("Vaild %d detect %d->%d RP %s", valid, i, j, rel_pose.tostr().c_str());
-                        auto det = generate_det_measurement(stamp, i, j);
-                        if (valid == 1) {
-                            det.remote_drone_id = i*MAX_DRONE_ID + j;
-                        }
-                        node_detected_pub.publish(det);
-                        continue;
-                    }
-                }
-            }
-        }
-    }
+    //                 int valid = is_detect_valid(rel_pose, i, j, d);
+    //                 if (valid > 0) {
+    //                     ROS_INFO("Vaild %d detect %d->%d RP %s", valid, i, j, rel_pose.tostr().c_str());
+    //                     auto det = generate_det_measurement(stamp, i, j);
+    //                     if (valid == 1) {
+    //                         det.remote_drone_id = i*MAX_DRONE_ID + j;
+    //                     }
+    //                     node_detected_pub.publish(det);
+    //                     continue;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     void publish_loop_edge(ros::Time ta, ros::Time tb, int ida, int idb, 
                 int kf_ida, int kf_idb, Swarm::Pose ego_posea, Swarm::Pose ego_poseb,
@@ -632,6 +636,24 @@ public:
             // ROS_INFO("%d GT %s", i, pose_gt.tostr().c_str());
         }
 
+        if(i == 1)
+        {
+            geometry_msgs::Pose pose_tmp = ground_truth_trajs[i].get_latest_pose().to_ros_pose();
+            ofstream foutC("/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/sim.csv", ios::app);
+            foutC.setf(ios::fixed, ios::floatfield);
+            foutC.precision(0);
+            foutC << stamp.toSec() * 1e9 << " ";
+            foutC.precision(5);
+            foutC << pose_tmp.position.x << " "
+                << pose_tmp.position.y << " "
+                << pose_tmp.position.z << " "
+                << pose_tmp.orientation.x << " "
+                << pose_tmp.orientation.y << " "
+                << pose_tmp.orientation.z << " " 
+                << pose_tmp.orientation.w << std::endl;
+            foutC.close();
+        }
+
         if (t > max_t) {
             exit(0);
         }
@@ -658,15 +680,15 @@ public:
         swarm_frame_pub.publish(sf);
         swarm_frame_predict_pub.publish(sf);
 
-        if (timer_count % 100 == 0) {
-            for (int i = 0; i < drone_num; i++) {
-                generate_loop_measurment(stamp, i);
-            }
-        }
+        // if (timer_count % 100 == 0) {
+        //     for (int i = 0; i < drone_num; i++) {
+        //         generate_loop_measurment(stamp, i);
+        //     }
+        // }
 
-        if (timer_count % 100 == 0) {
-            generate_pub_det_measurement(stamp);
-        }
+        // if (timer_count % 100 == 0) {
+        //     generate_pub_det_measurement(stamp);
+        // }
 
         timer_count++;
     }
