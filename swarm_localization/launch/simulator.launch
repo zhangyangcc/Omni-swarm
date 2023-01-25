@@ -1,14 +1,14 @@
 <launch>
-    <arg name="cam_file" default="$(find swarm_detector)/config/ptgrey_17591762_camera_calib.yaml" />
-    <arg name="extrinsic_path" default="/home/xuhao/swarm_ws/src/VINS-Fisheye/config/fisheye_ptgrey_n3/fisheye_cuda.yaml" />
+    <arg name="cam_file" default="/home/zy/ros_ws/omni_swarm_ws/src/Omni-swarm/swarm_localization/launch/ptgrey_17591762_camera_calib.yaml" />
+    <arg name="extrinsic_path" default="/home/zy/ros_ws/omni_swarm_ws/src/VINS-Fisheye/config/fisheye_ptgrey_n3/fisheye_cuda.yaml" />
     <arg name="drone_num" default="10" />
     <arg name="self_id" default="0" />
     <arg name="output" default="screen" />
-    <arg name="detector" default="true" />
-    <arg name="loop" default="true" />
+    <arg name="detector" default="false" />
+    <arg name="loop" default="false" />
     <arg name="distance" default="true" />
     <arg name="bag" default="true" />
-    <arg name="bag_path" default="$(env HOME)/bags/swarm_local_pc.bag" />
+    <arg name="bag_path" default="/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/swarm_local_pc.bag" />
     <arg name="cgraph" default="false" />
     <arg name="max_keyframe_num" default="100" />
     <arg name="debug_no_relocalization" default="false" />
@@ -16,7 +16,7 @@
     <arg name="distance_measurement_outlier_threshold" default="0.3" />
     <arg name="enable_da" default="false" />
     <arg name="debug_only_front" default="false" />
-    <arg name="viz" default="false" />
+    <arg name="viz" default="true" />
     <arg name="node_start_delay" default="3.0" />  
     <arg name="mission_type" default="0" />  
     <arg name="initial_dis" default="1.0" />  
@@ -80,7 +80,7 @@
         <arg name="enable_da" value="$(arg enable_da)" />
     </include>
 
-    <node pkg="rosbag" type="record" name="rosbag_record_local" 
+    <!-- <node pkg="rosbag" type="record" name="rosbag_record_local" 
         args='record -O $(arg bag_path) -a -x "/stereo/(.*)|/vins_estimator/flattened_(.*)"'
-        if="$(arg bag)" />
+        if="$(arg bag)" /> -->
 </launch>

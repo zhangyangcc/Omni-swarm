@@ -2,7 +2,7 @@
     <arg name="rand" default="10.0" />
     <arg name="viz" default="false" />
     <arg name="output" default="screen" />
-    <arg name="cgraph_path" default="/home/xuhao/graph.dot" />
+    <arg name="cgraph_path" default="/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/graph.dot" />
     <arg name="cgraph" default="true" />
     <arg name="enable_distance" default="true" />
     <arg name="enable_detection" default="true" />
