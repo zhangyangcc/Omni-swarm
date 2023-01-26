@@ -510,7 +510,7 @@ void SwarmLocalizationSolver::outlier_rejection_frame(SwarmFrame & sf) const {
             printf("\n");
         }
 
-        printf("--------------------------------------------------------------------\n\n");
+        // printf("--------------------------------------------------------------------\n\n");
     }    
 }
 
@@ -644,7 +644,7 @@ void SwarmLocalizationSolver::add_new_swarm_frame(const SwarmFrame &sf) {
         }
 
         add_as_keyframe(sf);
-        ROS_INFO("[SWARM_LOCAL] New kf found, sld win size %ld TS %d NFTS %d ID: [", sf_sld_win.size(),
+        ROS_INFO("[SWARM_LOCAL] New kf accepted, sld win size %ld TS %d NFTS %d ID: [", sf_sld_win.size(),
             TSShort(sf_sld_win.back().ts),
             TSShort(sf_sld_win.back().id2nodeframe[self_id].ts)
         );
@@ -666,6 +666,7 @@ void SwarmLocalizationSolver::add_new_swarm_frame(const SwarmFrame &sf) {
         drone_num = _ids.size();
     }
 
+    printf("--------------------------------------------------------------------\n\n");
     
 }
 
