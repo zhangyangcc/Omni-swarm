@@ -652,6 +652,7 @@ void SwarmLocalizationSolver::add_new_swarm_frame(const SwarmFrame &sf) {
             printf(" %d", _id);
         }
         printf("]\n");
+        printf("--------------------------------------------------------------------\n\n");
     }
 
 #ifdef ENABLE_REPLACE
@@ -665,8 +666,6 @@ void SwarmLocalizationSolver::add_new_swarm_frame(const SwarmFrame &sf) {
         //For here the drone num increase
         drone_num = _ids.size();
     }
-
-    printf("--------------------------------------------------------------------\n\n");
     
 }
 
