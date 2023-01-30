@@ -156,5 +156,5 @@ def odometry_covariance_per_meter(pos_vo, yaw_vo, pos_gt, yaw_gt, rp_lengths=[1.
 
 def short_loop_id(id):
     if id < 1e7:
-        return f"D{id}"
-    return f"L{id //10000 + id%10000}"
+        return "D{}".format(id)
+    return "L{}".format(id //10000 + id%10000)

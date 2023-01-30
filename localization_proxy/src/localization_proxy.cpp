@@ -601,9 +601,9 @@ class LocalProxy {
         swarm_frame sf;
         //Will predict till to vo stamp now
         ros::Time tnow = self_odom.header.stamp;
-        if (_force_id > 0 || ! odometry_available) {
-            tnow = ros::Time::now(); // If use force id, than directly use now time
-        }
+        // if (_force_id > 0 || ! odometry_available) {
+        //     tnow = ros::Time::now(); // If use force id, than directly use now time
+        // }
 
         sf.header.stamp = tnow;
         sf.self_id = self_id;
