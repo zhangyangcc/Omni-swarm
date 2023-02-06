@@ -334,8 +334,8 @@ class LocalProxy {
             auto tmp_quat = eulers2quat(eul);
             std::ofstream foutC(output_path, std::ios::app);
             foutC.setf(std::ios::fixed, std::ios::floatfield);
-            foutC.precision(0);
-            foutC << ts.toSec() * 1e9 << " ";
+            foutC.precision(9);
+            foutC << ts.toSec() << " ";
             foutC.precision(5);            
 
             foutC << pos.x << " "
