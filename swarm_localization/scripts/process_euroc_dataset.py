@@ -10,48 +10,6 @@ from swarm_msgs.msg import swarm_frame, node_frame, node_detected, swarm_detecte
 from utils import *
 import rosbag
 
-# from swarm_msgs.msg import swarm_frame, node_frame
-
-# groundtruth1 = 'data_mh_01_easy.tum'
-# groundtruth2 = 'data_MH_02_easy.tum'
-# groundtruth3 = 'data_mh_03_medium.tum'
-
-# groundtruth2_output = 'mh_02_output.tum'
-# groundtruth3_output = 'mh_03_output.tum'
-
-# poses_2 = []
-# poses_3 = []
-
-# first_flag = True
-
-# with open(groundtruth1,newline='') as csvfile:
-#     myreader = csv.reader(csvfile,delimiter=' ')
-#     for row in myreader:
-#       t1_min = Decimal(row[0])
-#       break
-
-# with open(groundtruth2_output,'w',newline='') as csvfile:
-
-#     mywriter = csv.writer(csvfile,delimiter=' ')
-
-#     with open(groundtruth2,newline='') as csvfile2:
-#         myreader = csv.reader(csvfile2,delimiter=' ')
-#         for row in myreader:
-
-#             if(first_flag):
-#                 first_flag = False
-#                 delta_21 = Decimal(row[0]) - t1_min
-#                 print(delta_21)
-
-#                 row[0] = str(Decimal(row[0]) - delta_21)
-#                 mywriter.writerow(row)
-#             else:
-#                 row[0] = str(Decimal(row[0]) - delta_21)
-#                 mywriter.writerow(row)
-
-#         first_flag = True
-
-# check weather the process is right
 
 def write_poses(output,time,pose,quat):
     if((len(time)!=len(pose)) or (len(time)!=len(quat))):
@@ -562,7 +520,8 @@ if __name__ == "__main__":
     with rosbag.Bag(output_bag, 'w') as outbag:
         for sf in swarm_frames:
             outbag.write("/swarm_drones/swarm_frame", sf, sf.header.stamp)
-            
+            outbag.write("/swarm_drones/swarm_frame_predict", sf, sf.header.stamp-rospy.Duration(0.02))
+
             
             
 
