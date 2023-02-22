@@ -287,9 +287,9 @@ def bag2dataset(bagname, nodes = [1, 4]):
     poses_vo = read_pose_swarm_frame(bag, "/swarm_drones/swarm_frame_predict")
 
     for i in nodes:
-        poses[i] = read_pose(bag, "/SwarmNode{}/pose".format(i))
+        # poses[i] = read_pose(bag, "/SwarmNode{}/pose".format(i))
         
-        output_pose_to_csv("/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/evaluate_dataset/stamped_groundtruth_{}.txt".format(i), poses[i])
+        # output_pose_to_csv("/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/evaluate_dataset/stamped_groundtruth_{}.txt".format(i), poses[i])
 
         output_pose_to_csv("/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/evaluate_dataset/stamped_traj_estimate_{}.txt".format(i), poses_fused[i])
 
@@ -401,6 +401,6 @@ def bag2dataset(bagname, nodes = [1, 4]):
 if __name__ == '__main__':
 
     input_bag = "/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/my_test.bag"
-    input_nodes = [1,4]
+    input_nodes = [1,2,3]
     bag2dataset(input_bag,input_nodes)
     print("hello world")
