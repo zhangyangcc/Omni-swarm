@@ -164,10 +164,10 @@ def construct_swarm(ts,pose,quat,velocity,distance,vo_avail,dis_avail):
 
         _nf.vo_available = vo_avail[i]
 
-        if(distance[0] and distance[1] and distance[2]):
+        if(dis_avail[1] and dis_avail[1] and dis_avail[2]):
             for j in range(len(pose)):
                 if(j != i):
-                    _nf.dismap_ids.append(j)
+                    _nf.dismap_ids.append(j+1)
                     _nf.dismap_dists.append(distance[i][j])
             
         _sf.node_frames.append(_nf)
@@ -494,6 +494,7 @@ if __name__ == "__main__":
     
     print("length of distance2 is %d" %len(distance12))
     print("length of distance3 is %d" %len(distance13))
+    print("length of dis12_available is %d" %len(dis12_available))
 
     swarm_frames = []
 
@@ -507,7 +508,7 @@ if __name__ == "__main__":
 
         distance_ = generate_dis_noise([distance12[i],distance13[i],distance23[i]])
         vo_avail_ = [vo1_available[i],vo2_available[i],vo3_available[i]]
-        dis_avail_ = [dis12_available,dis13_available,dis23_available]
+        dis_avail_ = [dis12_available[i],dis13_available[i],dis23_available[i]]
         
         sf = construct_swarm(ts_,pose_,quat_,velocity_,distance_,vo_avail_,dis_avail_)
         swarm_frames.append(sf)
