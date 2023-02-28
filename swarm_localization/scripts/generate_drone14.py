@@ -425,59 +425,38 @@ def generate_dis_noise(distance):
     available = ...
     '''
     dis_noise = 0.05
-    dis_out = [[0,distance[0]+np.random.randn()*dis_noise,distance[1]+np.random.randn()*dis_noise,distance[2]+np.random.randn()*dis_noise],
-                [distance[0]+np.random.randn()*dis_noise,0,distance[3]+np.random.randn()*dis_noise,distance[4]+np.random.randn()*dis_noise],
-                [distance[1]+np.random.randn()*dis_noise,distance[3]+np.random.randn()*dis_noise,0,distance[5]+np.random.randn()*dis_noise],
-                [distance[2]+np.random.randn()*dis_noise,distance[4]+np.random.randn()*dis_noise,distance[5]+np.random.randn()*dis_noise,0]]
+    dis_out = [[0,distance[0]+np.random.randn()*dis_noise],
+                [distance[0]+np.random.randn()*dis_noise,0]]
 
     return dis_out
 
 if __name__ == "__main__":
 
     groundtruth1 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_01_easy.tum'
-    groundtruth2 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_MH_02_easy.tum'
-    groundtruth3 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_03_medium.tum'
-    groundtruth4 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_04.tum'
+    groundtruth2 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_04.tum'
+
 
     delta21 = compute_delta_t(groundtruth1,groundtruth2)
-    delta31 = compute_delta_t(groundtruth1,groundtruth3)
-    delta41 = compute_delta_t(groundtruth1,groundtruth4)
 
     truth1_time,truth1_pose,truth1_quat = read_poses(groundtruth1)
     truth2_time,truth2_pose,truth2_quat = read_poses(groundtruth2)
-    truth3_time,truth3_pose,truth3_quat = read_poses(groundtruth3)
-    truth4_time,truth4_pose,truth4_quat = read_poses(groundtruth4)
 
     for it in range(len(truth2_time)):
         truth2_time[it] = truth2_time[it] - delta21
 
-    for it in range(len(truth3_time)):
-        truth3_time[it] = truth3_time[it] - delta31
-
-    for it in range(len(truth4_time)):
-        truth4_time[it] = truth4_time[it] - delta41
 
     vo1_file = "/home/zy/ros_ws/euroc_dataset/ground_truth_tum/latest_vo_mh01.csv"
-    vo2_file = "/home/zy/ros_ws/euroc_dataset/ground_truth_tum/latest_vo_mh02.csv"
-    vo3_file = "/home/zy/ros_ws/euroc_dataset/ground_truth_tum/latest_vo_mh03.csv"
-    vo4_file = "/home/zy/ros_ws/euroc_dataset/ground_truth_tum/latest_vo_mh04.csv"
+    vo2_file = "/home/zy/ros_ws/euroc_dataset/ground_truth_tum/latest_vo_mh04.csv"
 
     vo1_time,vo1_pose,vo1_quat,vo1_vel = read_poses_velocitys(vo1_file)
     vo2_time,vo2_pose,vo2_quat,vo2_vel = read_poses_velocitys(vo2_file)
-    vo3_time,vo3_pose,vo3_quat,vo3_vel = read_poses_velocitys(vo3_file)
-    vo4_time,vo4_pose,vo4_quat,vo4_vel = read_poses_velocitys(vo4_file)
+
 
     for it in range(len(vo2_time)):
         vo2_time[it] = vo2_time[it] - delta21
-    
-    for it in range(len(vo3_time)):
-        vo3_time[it] = vo3_time[it] - delta31
-
-    for it in range(len(vo4_time)):
-        vo4_time[it] = vo4_time[it] - delta41
     print("length of vo1_time is %d" %len(vo1_time))
     print("length of vo1_pose is %d" %len(vo1_pose))
-    print("length of vo2_quat is %d" %len(vo2_quat))
+    # print("length of vo2_quat is %d" %len(vo2_quat))
     print("----------------------------------")
 
 # sync vo data by function get_vo()
@@ -485,34 +464,22 @@ if __name__ == "__main__":
     for i  in range(len(vo1_time)):
         vo1_available.append(True)
     vo2_available, vo2_pose_sync, vo2_quat_sync, vo2_vel_sync = get_vo_velocity(vo1_time,vo2_time,vo2_pose,vo2_quat,vo2_vel)
-    vo3_available, vo3_pose_sync, vo3_quat_sync, vo3_vel_sync = get_vo_velocity(vo1_time,vo3_time,vo3_pose,vo3_quat,vo3_vel)
-    vo4_available, vo4_pose_sync, vo4_quat_sync, vo4_vel_sync = get_vo_velocity(vo1_time,vo4_time,vo4_pose,vo4_quat,vo4_vel)
     print("length of vo1_time is %d" %len(vo1_time))
     print("length of vo2_pose_sync is %d" %len(vo2_pose_sync))
-    print("length of vo2_quat_sync is %d" %len(vo2_quat_sync))
+    # print("length of vo2_quat_sync is %d" %len(vo2_quat_sync))
     print("----------------------------------")
     #write_poses("/home/zy/ros_ws/euroc_dataset/ground_truth_tum/aaa.csv",vo1_time,vo2_pose_sync,vo2_quat_sync)
 
     truth1_available, truth1_pose_sync, truth1_quat_sync = get_vo(vo1_time,truth1_time,truth1_pose,truth1_quat)
     truth2_available, truth2_pose_sync, truth2_quat_sync = get_vo(vo1_time,truth2_time,truth2_pose,truth2_quat)
-    truth3_available, truth3_pose_sync, truth3_quat_sync = get_vo(vo1_time,truth3_time,truth3_pose,truth3_quat)
-    truth4_available, truth4_pose_sync, truth4_quat_sync = get_vo(vo1_time,truth4_time,truth4_pose,truth4_quat)
 
-    print("length of truth1_pose_sync is %d" %len(truth1_pose_sync))
-    print("length of truth2_pose_sync is %d" %len(truth2_pose_sync))
-    print("length of truth3_pose_sync is %d" %len(truth3_pose_sync))
+
     print("----------------------------------")
 
+
     dis12_available,distance12 = compute_distance(truth1_available,truth1_pose_sync,truth2_available,truth2_pose_sync)
-    dis13_available,distance13 = compute_distance(truth1_available,truth1_pose_sync,truth3_available,truth3_pose_sync)
-    dis14_available,distance14 = compute_distance(truth1_available,truth1_pose_sync,truth4_available,truth4_pose_sync)
-    dis23_available,distance23 = compute_distance(truth2_available,truth2_pose_sync,truth3_available,truth3_pose_sync)
-    dis24_available,distance24 = compute_distance(truth2_available,truth2_pose_sync,truth4_available,truth4_pose_sync)
-    dis34_available,distance34 = compute_distance(truth3_available,truth3_pose_sync,truth4_available,truth4_pose_sync)
+
     
-    print("length of distance2 is %d" %len(distance12))
-    print("length of distance3 is %d" %len(distance13))
-    print("length of dis12_available is %d" %len(dis12_available))
 
     swarm_frames = []
 
@@ -520,13 +487,13 @@ if __name__ == "__main__":
 
         ts_ = vo1_time[i]
 
-        pose_ = [vo1_pose[i],vo2_pose_sync[i],vo3_pose_sync[i],vo4_pose_sync[i]]
-        quat_ = [vo1_quat[i],vo2_quat_sync[i],vo3_quat_sync[i],vo4_quat_sync[i]]
-        velocity_ = [vo1_vel[i],vo2_vel_sync[i],vo3_vel_sync[i],vo4_vel_sync[i]]
+        pose_ = [vo1_pose[i],vo2_pose_sync[i]]
+        quat_ = [vo1_quat[i],vo2_quat_sync[i]]
+        velocity_ = [vo1_vel[i],vo2_vel_sync[i]]
 
-        distance_ = generate_dis_noise([distance12[i],distance13[i],distance14[i],distance23[i],distance24[i],distance34[i]])
-        vo_avail_ = [vo1_available[i],vo2_available[i],vo3_available[i],vo4_available[i]]
-        dis_avail_ = dis12_available[i] and dis13_available[i] and dis14_available[i] and dis23_available[i] and dis24_available[i] and dis34_available[i]
+        distance_ = generate_dis_noise([distance12[i]])
+        vo_avail_ = [vo1_available[i],vo2_available[i]]
+        dis_avail_ = dis12_available[i]
         
         sf = construct_swarm(ts_,pose_,quat_,velocity_,distance_,vo_avail_,dis_avail_)
         swarm_frames.append(sf)
@@ -540,7 +507,3 @@ if __name__ == "__main__":
         for sf in swarm_frames:
             outbag.write("/swarm_drones/swarm_frame", sf, sf.header.stamp)
             outbag.write("/swarm_drones/swarm_frame_predict", sf, sf.header.stamp-rospy.Duration(0.02))
-
-            
-            
-
