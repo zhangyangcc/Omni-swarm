@@ -432,7 +432,7 @@ def generate_dis_noise(distance):
 
 if __name__ == "__main__":
 
-    groundtruth1 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_01_easy.tum'
+    groundtruth1 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_01.tum'
     groundtruth2 = '/home/zy/ros_ws/euroc_dataset/ground_truth_tum/data_mh_04.tum'
 
 
@@ -468,7 +468,7 @@ if __name__ == "__main__":
     print("length of vo2_pose_sync is %d" %len(vo2_pose_sync))
     # print("length of vo2_quat_sync is %d" %len(vo2_quat_sync))
     print("----------------------------------")
-    #write_poses("/home/zy/ros_ws/euroc_dataset/ground_truth_tum/aaa.csv",vo1_time,vo2_pose_sync,vo2_quat_sync)
+    write_poses("/home/zy/ros_ws/euroc_dataset/ground_truth_tum/aaa.csv",vo1_time,vo2_pose_sync,vo2_quat_sync)
 
     truth1_available, truth1_pose_sync, truth1_quat_sync = get_vo(vo1_time,truth1_time,truth1_pose,truth1_quat)
     truth2_available, truth2_pose_sync, truth2_quat_sync = get_vo(vo1_time,truth2_time,truth2_pose,truth2_quat)

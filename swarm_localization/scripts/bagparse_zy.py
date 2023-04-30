@@ -401,6 +401,6 @@ def bag2dataset(bagname, nodes = [1, 4]):
 if __name__ == '__main__':
 
     input_bag = "/home/zy/ros_ws/omni_swarm_ws/output/sim_test_output/my_test.bag"
-    input_nodes = [1,2,3]
+    input_nodes = [1,2,3,4]
     bag2dataset(input_bag,input_nodes)
     print("hello world")
