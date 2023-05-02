@@ -90,28 +90,28 @@ def read_pose_swarm_frame(bag, topic):
     return ret_poses
 
 # def read_distance_swarm_frame(bag, topic, _id, to)
-def read_distances_swarm_frame(bag, topic, t0):
-    distances = {
-    }
-    ts = []
-    # print(f"Read distances from topic {topic}")
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        if t.to_sec() > t0:
-            for node in msg.node_frames:
-                _ida = node.id
-                if not (_ida in distances):
-                    distances[_ida] = {}
-                for i in range(len(node.dismap_ids)):
-                    _id = node.dismap_ids[i]
-                    _dis = node.dismap_dists[i]
-                    if not (_id in distances[_ida]):
-                        distances[_ida][_id] = {
-                            "t": [],
-                            "dis": []
-                        }
-                    distances[_ida][_id]["t"].append(msg.header.stamp.to_sec() - t0)
-                    distances[_ida][_id]["dis"].append(_dis)
-    return distances
+# def read_distances_swarm_frame(bag, topic, t0):
+#     distances = {
+#     }
+#     ts = []
+#     # print(f"Read distances from topic {topic}")
+#     for topic, msg, t in bag.read_messages(topics=[topic]):
+#         if t.to_sec() > t0:
+#             for node in msg.node_frames:
+#                 _ida = node.id
+#                 if not (_ida in distances):
+#                     distances[_ida] = {}
+#                 for i in range(len(node.dismap_ids)):
+#                     _id = node.dismap_ids[i]
+#                     _dis = node.dismap_dists[i]
+#                     if not (_id in distances[_ida]):
+#                         distances[_ida][_id] = {
+#                             "t": [],
+#                             "dis": []
+#                         }
+#                     distances[_ida][_id]["t"].append(msg.header.stamp.to_sec() - t0)
+#                     distances[_ida][_id]["dis"].append(_dis)
+#     return distances
 
 def read_pose(bag, topic,P_vicon_in_imu=None):
     pos = []
@@ -150,120 +150,120 @@ def read_pose(bag, topic,P_vicon_in_imu=None):
     return ret
 
 
-def parse_path(path, t0, te):
-    pos = []
-    ypr = []
-    ts = []
-    quat = []
+# def parse_path(path, t0, te):
+#     pos = []
+#     ypr = []
+#     ts = []
+#     quat = []
     
-    for msg in path.poses:
-        if te > msg.header.stamp.to_sec() > t0:
-            p = msg.pose.position
-            q = msg.pose.orientation
-            pos.append([p.x, p.y, p.z])
-            y, p, r = quat2eulers(q.w, q.x, q.y, q.z)
-            ypr.append([y, p, r])
-            ts.append(msg.header.stamp.to_sec() - t0)
-            quat.append([q.w, q.x, q.y, q.z])  
-    ret = {
-        "t": np.array(ts),
-        "pos": np.array(pos),
-        "ypr": np.array(ypr),
-        "quat": np.array(quat)
-    }
+#     for msg in path.poses:
+#         if te > msg.header.stamp.to_sec() > t0:
+#             p = msg.pose.position
+#             q = msg.pose.orientation
+#             pos.append([p.x, p.y, p.z])
+#             y, p, r = quat2eulers(q.w, q.x, q.y, q.z)
+#             ypr.append([y, p, r])
+#             ts.append(msg.header.stamp.to_sec() - t0)
+#             quat.append([q.w, q.x, q.y, q.z])  
+#     ret = {
+#         "t": np.array(ts),
+#         "pos": np.array(pos),
+#         "ypr": np.array(ypr),
+#         "quat": np.array(quat)
+#     }
 
-    return ret
+#     return ret
 
-def read_path(bag, topic, t0, te):
-    path = None
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        path = msg
-    if path is not None:
-        return parse_path(path, t0, te)
-    return None
+# def read_path(bag, topic, t0, te):
+#     path = None
+#     for topic, msg, t in bag.read_messages(topics=[topic]):
+#         path = msg
+#     if path is not None:
+#         return parse_path(path, t0, te)
+#     return None
 
-def poses_length(poses):
-    dp = np.diff(poses["pos"], axis=0)
-    length = np.sum(np.linalg.norm(dp,axis=1))
-    return length
+# def poses_length(poses):
+#     dp = np.diff(poses["pos"], axis=0)
+#     length = np.sum(np.linalg.norm(dp,axis=1))
+#     return length
 
-def parse_loopedge(msg, t0):
-    pos = msg.relative_pose.position
-    q = msg.relative_pose.orientation
-    y, p, r = quat2eulers(q.w, q.x, q.y, q.z)
+# def parse_loopedge(msg, t0):
+#     pos = msg.relative_pose.position
+#     q = msg.relative_pose.orientation
+#     y, p, r = quat2eulers(q.w, q.x, q.y, q.z)
 
-    loop = {
-        "ts_a": msg.ts_a.to_sec() - t0,
-        "ts_b": msg.ts_b.to_sec() - t0,
-        "id_a":msg.id_a,
-        "id_b":msg.id_b,
-        "dpos":np.array([pos.x, pos.y, pos.z]),
-        "dyaw":y,
-        "id":msg.id,
-        "pnp_inlier_num": msg.pnp_inlier_num
-    }
-    return loop
+#     loop = {
+#         "ts_a": msg.ts_a.to_sec() - t0,
+#         "ts_b": msg.ts_b.to_sec() - t0,
+#         "id_a":msg.id_a,
+#         "id_b":msg.id_b,
+#         "dpos":np.array([pos.x, pos.y, pos.z]),
+#         "dyaw":y,
+#         "id":msg.id,
+#         "pnp_inlier_num": msg.pnp_inlier_num
+#     }
+#     return loop
     
-def read_loops(bag, t0, topic="/swarm_loop/loop_connection"):
-    loops = []
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        loops.append(parse_loopedge(msg, t0))
-    return loops 
+# def read_loops(bag, t0, topic="/swarm_loop/loop_connection"):
+#     loops = []
+#     for topic, msg, t in bag.read_messages(topics=[topic]):
+#         loops.append(parse_loopedge(msg, t0))
+#     return loops 
 
-def read_goodloops(bag, t0, topic="/swarm_drones/goodloops"):
-    all_loops = []
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        loops = []
-        for _msg in msg.loops:
-            loops.append(parse_loopedge(_msg, t0))
-        all_loops.append(loops)
-    return all_loops 
+# def read_goodloops(bag, t0, topic="/swarm_drones/goodloops"):
+#     all_loops = []
+#     for topic, msg, t in bag.read_messages(topics=[topic]):
+#         loops = []
+#         for _msg in msg.loops:
+#             loops.append(parse_loopedge(_msg, t0))
+#         all_loops.append(loops)
+#     return all_loops 
 
 
-def read_detections_6d(bag, t0, topic="/swarm_drones/node_detected_6d"):
-    dets = []
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        pos = msg.relative_pose.pose.position
-        q = msg.relative_pose.pose.orientation
-        y, p, r = quat2eulers(q.w, q.x, q.y, q.z)
-        det = {
-            "ts": msg.header.stamp.to_sec() - t0,
-            "ts_a": msg.header.stamp.to_sec() - t0,
-            "ts_b": msg.header.stamp.to_sec() - t0,
-            "id_a":msg.self_drone_id,
-            "id": msg.id,
-            "id_b":msg.remote_drone_id,
-            "dpos":np.array([pos.x, pos.y, pos.z]),
-            "dyaw":y,
-            "pnp_inlier_num": 0
-        }
-        dets.append(det)
-    return dets
+# def read_detections_6d(bag, t0, topic="/swarm_drones/node_detected_6d"):
+#     dets = []
+#     for topic, msg, t in bag.read_messages(topics=[topic]):
+#         pos = msg.relative_pose.pose.position
+#         q = msg.relative_pose.pose.orientation
+#         y, p, r = quat2eulers(q.w, q.x, q.y, q.z)
+#         det = {
+#             "ts": msg.header.stamp.to_sec() - t0,
+#             "ts_a": msg.header.stamp.to_sec() - t0,
+#             "ts_b": msg.header.stamp.to_sec() - t0,
+#             "id_a":msg.self_drone_id,
+#             "id": msg.id,
+#             "id_b":msg.remote_drone_id,
+#             "dpos":np.array([pos.x, pos.y, pos.z]),
+#             "dyaw":y,
+#             "pnp_inlier_num": 0
+#         }
+#         dets.append(det)
+#     return dets
 
-def read_loop_inliers(bag, topic="/swarm_drones/loop_inliers"):
-    inliers_set = []
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        _set = set(msg.data)
-        inliers_set.append(_set)
-    return inliers_set
+# def read_loop_inliers(bag, topic="/swarm_drones/loop_inliers"):
+#     inliers_set = []
+#     for topic, msg, t in bag.read_messages(topics=[topic]):
+#         _set = set(msg.data)
+#         inliers_set.append(_set)
+#     return inliers_set
 
-def read_detections_raw(bag, t0, topic="/swarm_detection/swarm_detected_raw"):
-    dets = []
-    for topic, _msg, t in bag.read_messages(topics=[topic]):
-        for msg in _msg.detected_nodes_xyz_yaw:
-            det = {
-                "ts": msg.header.stamp.to_sec() - t0,
-                "id_a":msg.self_drone_id,
-                "id": msg.id,
-                "id_b":msg.remote_drone_id,
-                "dpos":np.array([msg.dpos.x, msg.dpos.y, msg.dpos.z]),
-                "pos_a" : np.array([msg.local_pose_self.position.x, msg.local_pose_self.position.y, msg.local_pose_self.position.z]),
-                "pos_b" : np.array([msg.local_pose_remote.position.x, msg.local_pose_remote.position.y, msg.local_pose_remote.position.z]),
-                "extrinsic" : np.array([msg.camera_extrinsic.position.x, msg.camera_extrinsic.position.y, msg.camera_extrinsic.position.z]),
-                "inv_dep":msg.inv_dep
-            }
-            dets.append(det)
-    return dets
+# def read_detections_raw(bag, t0, topic="/swarm_detection/swarm_detected_raw"):
+#     dets = []
+#     for topic, _msg, t in bag.read_messages(topics=[topic]):
+#         for msg in _msg.detected_nodes_xyz_yaw:
+#             det = {
+#                 "ts": msg.header.stamp.to_sec() - t0,
+#                 "id_a":msg.self_drone_id,
+#                 "id": msg.id,
+#                 "id_b":msg.remote_drone_id,
+#                 "dpos":np.array([msg.dpos.x, msg.dpos.y, msg.dpos.z]),
+#                 "pos_a" : np.array([msg.local_pose_self.position.x, msg.local_pose_self.position.y, msg.local_pose_self.position.z]),
+#                 "pos_b" : np.array([msg.local_pose_remote.position.x, msg.local_pose_remote.position.y, msg.local_pose_remote.position.z]),
+#                 "extrinsic" : np.array([msg.camera_extrinsic.position.x, msg.camera_extrinsic.position.y, msg.camera_extrinsic.position.z]),
+#                 "inv_dep":msg.inv_dep
+#             }
+#             dets.append(det)
+#     return dets
 
 def output_pose_to_csv(filename, poses, skip = 1):
     with open(filename, 'w') as writer:
@@ -277,7 +277,7 @@ def output_pose_to_csv(filename, poses, skip = 1):
 
 def bag2dataset(bagname, nodes = [1, 4]):
     bag = rosbag.Bag(bagname)
-    poses = {}
+    # poses = {}
     poses_fused = {}
     poses_vo = {}
 
